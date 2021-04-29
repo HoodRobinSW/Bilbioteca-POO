@@ -33,7 +33,7 @@ import javax.swing.DefaultComboBoxModel;
 
 public class Menu extends JFrame {
 
-	private JPanel contentPane;
+	private JPanel contentPane,panel;
 	private ImageIcon icon;
 	private JButton btnAdd,btnEdit,btnDelete,btnSave,btnUndo;
 	private JPanel panel_1,panel_2;
@@ -50,13 +50,14 @@ public class Menu extends JFrame {
 	private JTable tableBiblioteca;
 	private JScrollPane scrollPane;
 	private DefaultTableModel dtm;
-	private List<Libro> libros;
+	private List<Libro> listaLibros;
 	private String titulos[]={"idLibro","Titulo","Autor","Editorial","Isbn","FechaPrestamo","Prestado"};
 	private String libro[];
 	private JTextField textConsulta;
 	private JLabel lblConsulta;
 	private JComboBox comboBox;
 	private JButton btnFiltrar;
+	private int index;
 	
 	public Menu(List<Libro> libros) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -65,14 +66,20 @@ public class Menu extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		this.libros=libros;
+		this.listaLibros=libros;
+		index=0;
 		
 		definirVentana();
-		definirEvento();
+		definirEventosNavegacion();
+		definirEventosMantenimiento();
+		setGrid(listaLibros);
+		setBotonesNavegacion(index,listaLibros);
+		setLibro(index,listaLibros);
+		setMantenimiento(index,listaLibros);
 		setVisible(true);
 	}
 
-	private void definirEvento() {
+	private void definirEventosMantenimiento() {
 		// TODO Auto-generated method stub
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -90,18 +97,87 @@ public class Menu extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 			}
 		});
-		chckbxPrestado.addActionListener(new ActionListener() {
+	}
+
+	private void setMantenimiento(int index, List<Libro> listaLibros) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void setLibro(int index, List<Libro> listaLibros) {
+		// TODO Auto-generated method stub
+		textTitulo.setText(listaLibros.get(index).getTitulo());
+		textAutor.setText(listaLibros.get(index).getAutor());
+		textEditorial.setText(listaLibros.get(index).getEditorial());
+		textIsbn.setText(listaLibros.get(index).getIsbn());
+		textFecha.setText(listaLibros.get(index).getFechaRegistro().toString());
+		chckbxPrestado.setSelected(listaLibros.get(index).isPrestado()); 
+	}
+
+	private void setBotonesNavegacion(int index,List<Libro> lista) {
+		// TODO Auto-generated method stub
+		if (index==0) {
+			btnBeginning.setEnabled(false);
+			btnBackward.setEnabled(false);
+			btnEnd.setEnabled(true);
+			btnForward.setEnabled(true);
+		} else if (index>0 && index<lista.size()-1) {
+			btnBeginning.setEnabled(true);
+			btnBackward.setEnabled(true);
+			btnEnd.setEnabled(true);
+			btnForward.setEnabled(true);
+		} else {
+			btnForward.setEnabled(false);
+			btnEnd.setEnabled(false);
+			btnBeginning.setEnabled(true);
+			btnBackward.setEnabled(true);
+		}
+	
+	}
+
+	private void setGrid(List<Libro> listaLibros) {
+		// TODO Auto-generated method stub
+		for (Libro lib:listaLibros) {
+			this.libro=lib.toString().split(",");
+			dtm.addRow(this.libro);
+		}
+	}
+
+	private void definirEventosNavegacion() {
+		// TODO Auto-generated method stub
+		btnEnd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (chckbxPrestado.isSelected()) {
-					
-				}
+				index=listaLibros.size()-1;
+				setBotonesNavegacion(index,listaLibros);
+				setLibro(index,listaLibros);
+			}
+		});
+		btnBeginning.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				index=0;
+				setBotonesNavegacion(index,listaLibros);
+				setLibro(index,listaLibros);
+			}
+		});
+		btnForward.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				index++;
+				setBotonesNavegacion(index,listaLibros);
+				setLibro(index,listaLibros);
+			}
+		});
+		btnBackward.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				index--;
+				setBotonesNavegacion(index,listaLibros);
+				setLibro(index,listaLibros);
 			}
 		});
 	}
 
 	private void definirVentana() {
 		// TODO Auto-generated method stub
-		JPanel panel = new JPanel();
+		panel = new JPanel();
 		panel.setBorder(new TitledBorder(new LineBorder(new Color(0, 0, 255), 2), "Mantenimiento Libros", TitledBorder.LEADING, TitledBorder.TOP, null, Color.BLUE));
 		panel.setBounds(27, 26, 271, 89);
 		contentPane.add(panel);
@@ -160,7 +236,6 @@ public class Menu extends JFrame {
 		panel_1.add(lblTitulo);
 		
 		textTitulo = new JTextField();
-		textTitulo.setText(libros.get(0).getTitulo());
 		textTitulo.setEditable(false);
 		textTitulo.setColumns(10);
 		textTitulo.setBounds(104, 61, 195, 20);
@@ -172,7 +247,6 @@ public class Menu extends JFrame {
 		panel_1.add(lblAutor);
 		
 		textAutor = new JTextField();
-		textAutor.setText(libros.get(0).getAutor());
 		textAutor.setEditable(false);
 		textAutor.setColumns(10);
 		textAutor.setBounds(104, 92, 195, 20);
@@ -184,7 +258,6 @@ public class Menu extends JFrame {
 		panel_1.add(lblEditorial);
 		
 		textEditorial = new JTextField();
-		textEditorial.setText(libros.get(0).getEditorial());
 		textEditorial.setEditable(false);
 		textEditorial.setColumns(10);
 		textEditorial.setBounds(104, 123, 195, 20);
@@ -196,7 +269,6 @@ public class Menu extends JFrame {
 		panel_1.add(lblIsbn);
 		
 		textIsbn = new JTextField();
-		textIsbn.setText(libros.get(0).getIsbn());
 		textIsbn.setEditable(false);
 		textIsbn.setColumns(10);
 		textIsbn.setBounds(104, 154, 195, 20);
@@ -208,7 +280,6 @@ public class Menu extends JFrame {
 		panel_1.add(lblFecha);
 		
 		textFecha = new JTextField();
-		textFecha.setText(libros.get(0).getFechaRegistro().toString());
 		textFecha.setEditable(false);
 		textFecha.setColumns(10);
 		textFecha.setBounds(104, 185, 109, 20);
@@ -220,7 +291,6 @@ public class Menu extends JFrame {
 		panel_1.add(lblFecha2);
 		
 		chckbxPrestado = new JCheckBox("Prestado");
-		chckbxPrestado.setSelected(libros.get(0).isPrestado()); 
 		chckbxPrestado.setEnabled(false);
 		chckbxPrestado.setFont(new Font("Tahoma", Font.BOLD, 11));
 		chckbxPrestado.setBounds(24, 211, 76, 23);
@@ -286,9 +356,5 @@ public class Menu extends JFrame {
 		btnFiltrar.setBounds(821, 45, 89, 22);
 		contentPane.add(btnFiltrar);
 		dtm.setColumnIdentifiers(titulos);
-		for (Libro lib:libros) {
-			this.libro=lib.toString().split(",");
-			dtm.addRow(this.libro);
-		}
 	}
 }
