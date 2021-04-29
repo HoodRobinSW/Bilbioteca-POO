@@ -52,8 +52,10 @@ public class BibliotecaController {
 			String precio,String prestado) throws NumberFormatException, ParseException, CampoObligatorioException, IsbnException, containsException {
 		boolean agregado=false;
 		Libro libro=new Libro(isbn, titulo, autor, editorial, fechaRegistro, precio, prestado);
-		if (!biblioteca.contains(libro))
+		if (!biblioteca.contains(libro)) {
 			biblioteca.add(libro);
+			agregado=true;
+		}
 		else throw new containsException();
 		return agregado;
 	}
@@ -78,11 +80,15 @@ public class BibliotecaController {
 		return eliminado;
 	}
 	
-	public boolean editar(String isbn,String precio) throws NumberFormatException, CampoObligatorioException{
+	public boolean editar(String isbn,String titulo,String autor,String editorial,String fechaRegistro,
+			String precio,String prestado) throws NumberFormatException, CampoObligatorioException, ParseException{
 		boolean editado=false;
 		Libro libro=buscar(isbn);
-		if (libro!=null)
-			libro.setPrecio(precio);
+		if (libro!=null) {
+			libro.setPrecio(precio);libro.setTitulo(titulo);libro.setAutor(autor);libro.setEditorial(editorial);
+			libro.setFechaRegistro(fechaRegistro);libro.setPrestado(prestado);
+			editado=true;
+		}
 		
 		return editado;
 	}

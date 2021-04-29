@@ -73,7 +73,7 @@ public class Menu extends JFrame {
 	private JButton btnFiltrar;
 	private int index;
 	private Libro libro;
-	private JFrame errorMessage;
+	private JFrame errorMessage,libroGuardado;
 	private BibliotecaController bc;
 	private JTextField textPrecio;
 	
@@ -100,13 +100,16 @@ public class Menu extends JFrame {
 	private void definirEventosMantenimiento() {
 		// TODO Auto-generated method stub
 		btnAdd.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e) {				
 				tableBiblioteca.setRowSelectionAllowed(false);
 				btnAdd.setEnabled(false);
 				btnEdit.setEnabled(false);
 				btnDelete.setEnabled(false);
 				btnSave.setEnabled(true);
 				btnUndo.setEnabled(true);
+				comboBox.setEnabled(false);
+				textConsulta.setEnabled(false);
+				btnFiltrar.setEnabled(false);
 				
 				textTitulo.setText("");
 				textTitulo.setEditable(true);
@@ -128,29 +131,88 @@ public class Menu extends JFrame {
 				btnForward.setEnabled(false);
 			}
 		});
-		btnEdit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				textTitulo.setEditable(true);
-				textAutor.setEditable(true);
-			}
+		btnEdit.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if (btnEdit.isSelected()) {
+					icon=new ImageIcon("img/editshadow.png");
+					btnEdit.setIcon(icon);
+					icon=null;
+					
+					btnAdd.setEnabled(false);
+					btnDelete.setEnabled(false);
+					btnUndo.setEnabled(true);
+					comboBox.setEnabled(false);
+					textConsulta.setEnabled(false);
+					btnFiltrar.setEnabled(false);
+					
+					textTitulo.setEditable(true);
+					textAutor.setEditable(true);
+					textEditorial.setEditable(true);
+					textPrecio.setEditable(true);
+					textFecha.setEditable(true);
+					chckbxPrestado.setEnabled(true);
+				} else {
+					icon=new ImageIcon("img/edit.png");
+					btnEdit.setIcon(icon);
+					icon=null;
+					String titulo=textTitulo.getText(),autor=textAutor.getText(),editorial=textEditorial.getText(),isbn=textIsbn.getText(),precio=textPrecio.getText(),
+							fecha=textFecha.getText(),prestado=chckbxPrestado.isSelected()+"";
+					Boolean editado=false;
+					try {
+						editado=bc.editar(isbn, titulo, autor, editorial, fecha, precio, prestado);
+					} catch (NumberFormatException | ParseException | CampoObligatorioException l) {
+						// TODO Auto-generated catch block
+						JOptionPane.showMessageDialog(errorMessage,l.getMessage(),"ERROR!",JOptionPane.ERROR_MESSAGE);
+					}
+					if (editado) {
+						setGrid(listaLibros);
+						btnUndo.doClick();
+					}
+					
+				}
+			}		
 		});
 		btnDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int input=JOptionPane.showConfirmDialog(null, "¿Estas seguro de que deseas eliminar el libro?","ATENCION",JOptionPane.WARNING_MESSAGE);
+				if (input==0) {
+					listaLibros.remove(listaLibros.get(index));
+					if (listaLibros.size()==0) {
+						btnDelete.setEnabled(false);
+						btnEdit.setEnabled(false);
+					}
+					index=0;
+					setBotonesNavegacion();
+					setGrid(listaLibros);
+					setLibro();
+				}
+					
 			}
 		});
 		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e) {				
 				String titulo=textTitulo.getText(),autor=textAutor.getText(),editorial=textEditorial.getText(),isbn=textIsbn.getText(),precio=textPrecio.getText(),
 						fecha=textFecha.getText(),prestado=chckbxPrestado.isSelected()+"";
+				Boolean agregado=false;
 				try {
-					bc.agregar(isbn, titulo, autor, editorial, fecha, precio, prestado);
+					agregado=bc.agregar(isbn, titulo, autor, editorial, fecha, precio, prestado);
 				} catch (NumberFormatException | ParseException | CampoObligatorioException | IsbnException | containsException l) {
 					// TODO Auto-generated catch block
 					JOptionPane.showMessageDialog(errorMessage,l.getMessage(),"ERROR!",JOptionPane.ERROR_MESSAGE);
 				}
+				if (agregado) {
+					if (listaLibros.size()==1) {
+						btnDelete.setEnabled(true);
+						btnEdit.setEnabled(true);
+					}
+					setCampoDeLibrosAVacio();
+					JOptionPane.showMessageDialog(libroGuardado, "El libro se guardó correctamente","ATENCION",JOptionPane.PLAIN_MESSAGE);
+					}
 				setGrid(listaLibros);
 			}
+
 		});
+		
 		btnUndo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				libro=null;
@@ -159,6 +221,9 @@ public class Menu extends JFrame {
 				btnDelete.setEnabled(true);
 				btnSave.setEnabled(false);
 				btnUndo.setEnabled(false);
+				comboBox.setEnabled(true);
+				textConsulta.setEnabled(true);
+				btnFiltrar.setEnabled(true);
 				
 				textTitulo.setText(listaLibros.get(index).getTitulo());
 				textTitulo.setEditable(false);
@@ -174,14 +239,29 @@ public class Menu extends JFrame {
 				textFecha.setEditable(false);
 				chckbxPrestado.setSelected(listaLibros.get(index).isPrestado());
 				chckbxPrestado.setEnabled(false);
+				
 				setBotonesNavegacion();
 				tableBiblioteca.setRowSelectionAllowed(true);
+				btnEdit.setSelected(false);
+				
 			}
 		});
 	}
-
+	
+	private void setCampoDeLibrosAVacio() {
+		// TODO Auto-generated method stub
+		textTitulo.setText("");
+		textAutor.setText("");
+		textEditorial.setText("");
+		textPrecio.setText("");
+		textFecha.setText("");
+		textIsbn.setText("");
+		chckbxPrestado.setSelected(false);
+	}
+	
 	private void setLibro() {
 		// TODO Auto-generated method stub
+		if (listaLibros.size()>0) {
 		textTitulo.setText(listaLibros.get(index).getTitulo());
 		textAutor.setText(listaLibros.get(index).getAutor());
 		textEditorial.setText(listaLibros.get(index).getEditorial());
@@ -189,25 +269,47 @@ public class Menu extends JFrame {
 		textPrecio.setText(listaLibros.get(index).getPrecio()+"");
 		textFecha.setText(listaLibros.get(index).getFechaRegistro().toString());
 		chckbxPrestado.setSelected(listaLibros.get(index).isPrestado()); 
+		} else {
+			setCampoDeLibrosAVacio();
+		}
 	}
 
 	private void setBotonesNavegacion() {
 		// TODO Auto-generated method stub
-		if (index==0) {
-			btnBeginning.setEnabled(false);
-			btnBackward.setEnabled(false);
-			btnEnd.setEnabled(true);
-			btnForward.setEnabled(true);
-		} else if (index>0 && index<listaLibros.size()-1) {
-			btnBeginning.setEnabled(true);
-			btnBackward.setEnabled(true);
-			btnEnd.setEnabled(true);
-			btnForward.setEnabled(true);
-		} else {
+		if (listaLibros.size()>2) {
+			if (index==0) {
+				btnBeginning.setEnabled(false);
+				btnBackward.setEnabled(false);
+				btnEnd.setEnabled(true);
+				btnForward.setEnabled(true);
+			} else if (index>0 && index<listaLibros.size()-1) {
+				btnBeginning.setEnabled(true);
+				btnBackward.setEnabled(true);
+				btnEnd.setEnabled(true);
+				btnForward.setEnabled(true);
+			} else {
+				btnForward.setEnabled(false);
+				btnEnd.setEnabled(false);
+				btnBeginning.setEnabled(true);
+				btnBackward.setEnabled(true);
+			}
+		} else if (listaLibros.size()==2){
+			if (index==0) {
+				btnForward.setEnabled(true);
+				btnEnd.setEnabled(false);
+				btnBeginning.setEnabled(false);
+				btnBackward.setEnabled(false);
+			} else {
+				btnForward.setEnabled(false);
+				btnEnd.setEnabled(false);
+				btnBeginning.setEnabled(false);
+				btnBackward.setEnabled(true);
+			}
+		}else {
 			btnForward.setEnabled(false);
 			btnEnd.setEnabled(false);
-			btnBeginning.setEnabled(true);
-			btnBackward.setEnabled(true);
+			btnBeginning.setEnabled(false);
+			btnBackward.setEnabled(false);
 		}
 	
 	}
@@ -221,7 +323,8 @@ public class Menu extends JFrame {
 			columnaslibro=lib.toString().split(",");
 			dtm.addRow(columnaslibro);
 		}
-		tableBiblioteca.setRowSelectionInterval(index, index);
+//		if (lista.size()>0)
+//		tableBiblioteca.setRowSelectionInterval(index, index);
 	}
 
 	private void definirEventosNavegacion() {
@@ -445,7 +548,7 @@ public class Menu extends JFrame {
 		btnFiltrar.setBounds(821, 45, 89, 22);
 		contentPane.add(btnFiltrar);
 		
-		this.errorMessage=this;
+		this.errorMessage=this;this.libroGuardado=this;
 		
 		tableBiblioteca.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {

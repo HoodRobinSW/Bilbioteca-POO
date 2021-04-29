@@ -47,17 +47,17 @@ public class Libro {
 		if (isbn.isEmpty())
 			throw new CampoObligatorioException();
 		
-		isbn=isbn.replace("-", "");
+		String isbnReplace=isbn.replace("-", "");
 		
-		if (isbn.length()!=13)
+		if (isbnReplace.length()!=13)
 			throw new IsbnException();
 		
-		int dc=Integer.parseInt(Character.toString(isbn.charAt(12)));
+		int dc=Integer.parseInt(Character.toString(isbnReplace.charAt(12)));
 		int suma=0;
-		for (int x=0;x<isbn.length()-1;x++) {
+		for (int x=0;x<isbnReplace.length()-1;x++) {
 			if (x%2==0)
-				suma+=Integer.parseInt(Character.toString(isbn.charAt(x)));
-			else suma+=Integer.parseInt(Character.toString(isbn.charAt(x)))*3;
+				suma+=Integer.parseInt(Character.toString(isbnReplace.charAt(x)));
+			else suma+=Integer.parseInt(Character.toString(isbnReplace.charAt(x)))*3;
 		}
 		int comprobante=10-(suma%10);
 		if (comprobante==10)
