@@ -109,9 +109,9 @@ public class Libro {
 		if (fechaRegistro.isEmpty() || fechaRegistro.equals("null"))
 			throw new CampoObligatorioException();
 		
-		java.util.Date fecha;
+		java.util.Date fecha=null;
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
-		sdf.setLenient(prestado);
+		sdf.setLenient(false);
 		fecha=sdf.parse(fechaRegistro);
 		
 		this.fechaRegistro = new java.sql.Date(fecha.getTime());

@@ -10,6 +10,9 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
@@ -20,6 +23,7 @@ import javax.swing.table.DefaultTableModel;
 import Controlador.BibliotecaController;
 import Excepciones.CampoObligatorioException;
 import Excepciones.IsbnException;
+import Excepciones.containsException;
 import Modelo.Libro;
 
 import javax.swing.border.LineBorder;
@@ -27,12 +31,16 @@ import java.awt.Color;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+
 import java.awt.Font;
 import javax.swing.SwingConstants;
 import javax.swing.JCheckBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
@@ -41,15 +49,15 @@ public class Menu extends JFrame {
 
 	private JPanel contentPane,panel;
 	private ImageIcon icon;
-	private JButton btnAdd,btnEdit,btnDelete,btnSave,btnUndo;
+	private JButton btnAdd,btnDelete,btnSave,btnUndo;
+	private JToggleButton btnEdit;
 	private JPanel panel_1,panel_2;
-	private JTextField textIdLibro;
 	private JTextField textTitulo;
 	private JTextField textAutor;
 	private JTextField textEditorial;
 	private JTextField textIsbn;
 	private JTextField textFecha;
-	private JLabel lblIdLibros,lblTitulo,lblAutor,lblEditorial,lblIsbn,lblFecha,lblFecha2;
+	private JLabel lblTitulo,lblAutor,lblEditorial,lblIsbn,lblFecha,lblFecha2,lblPrecio;
 	private JCheckBox chckbxPrestado;
 	private JButton btnBeginning,btnBackward,btnForward,btnEnd;
 	private JPanel panel_3;
@@ -57,7 +65,7 @@ public class Menu extends JFrame {
 	private JScrollPane scrollPane;
 	private DefaultTableModel dtm;
 	private List<Libro> listaLibros;
-	private String titulos[]={"idLibro","Titulo","Autor","Editorial","Isbn","FechaPrestamo","Prestado"};
+	private String titulos[]={"ISBN","Titulo","Autor","Editorial","Fecha","Precio","Prestado"};
 	private String columnaslibro[];
 	private JTextField textConsulta;
 	private JLabel lblConsulta;
@@ -67,6 +75,7 @@ public class Menu extends JFrame {
 	private Libro libro;
 	private JFrame errorMessage;
 	private BibliotecaController bc;
+	private JTextField textPrecio;
 	
 	public Menu() throws NumberFormatException, IOException, ParseException, CampoObligatorioException, IsbnException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,8 +92,8 @@ public class Menu extends JFrame {
 		definirEventosNavegacion();
 		definirEventosMantenimiento();
 		setGrid(listaLibros);
-		setBotonesNavegacion(index,listaLibros);
-		setLibro(index,listaLibros);
+		setBotonesNavegacion();
+		setLibro();
 		setVisible(true);
 	}
 
@@ -92,6 +101,7 @@ public class Menu extends JFrame {
 		// TODO Auto-generated method stub
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				tableBiblioteca.setRowSelectionAllowed(false);
 				btnAdd.setEnabled(false);
 				btnEdit.setEnabled(false);
 				btnDelete.setEnabled(false);
@@ -106,6 +116,8 @@ public class Menu extends JFrame {
 				textEditorial.setEditable(true);
 				textIsbn.setText("");
 				textIsbn.setEditable(true);
+				textPrecio.setText("");
+				textPrecio.setEditable(true);
 				textFecha.setText("");
 				textFecha.setEditable(true);
 				chckbxPrestado.setSelected(false);
@@ -118,6 +130,8 @@ public class Menu extends JFrame {
 		});
 		btnEdit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				textTitulo.setEditable(true);
+				textAutor.setEditable(true);
 			}
 		});
 		btnDelete.addActionListener(new ActionListener() {
@@ -126,14 +140,15 @@ public class Menu extends JFrame {
 		});
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String titulo=textTitulo.getText(),autor=textAutor.getText(),editorial=textEditorial.getText(),isbn=textIsbn.getText(),
+				String titulo=textTitulo.getText(),autor=textAutor.getText(),editorial=textEditorial.getText(),isbn=textIsbn.getText(),precio=textPrecio.getText(),
 						fecha=textFecha.getText(),prestado=chckbxPrestado.isSelected()+"";
 				try {
-					bc.agregar(isbn, titulo, autor, editorial, fecha, fecha, prestado);
-				} catch (NumberFormatException | ParseException | CampoObligatorioException | IsbnException l) {
+					bc.agregar(isbn, titulo, autor, editorial, fecha, precio, prestado);
+				} catch (NumberFormatException | ParseException | CampoObligatorioException | IsbnException | containsException l) {
 					// TODO Auto-generated catch block
 					JOptionPane.showMessageDialog(errorMessage,l.getMessage(),"ERROR!",JOptionPane.ERROR_MESSAGE);
 				}
+				setGrid(listaLibros);
 			}
 		});
 		btnUndo.addActionListener(new ActionListener() {
@@ -153,33 +168,37 @@ public class Menu extends JFrame {
 				textEditorial.setEditable(false);
 				textIsbn.setText(listaLibros.get(index).getIsbn());
 				textIsbn.setEditable(false);
+				textPrecio.setText(listaLibros.get(index).getPrecio()+"");
+				textPrecio.setEditable(false);
 				textFecha.setText(listaLibros.get(index).getFechaRegistro().toString());
 				textFecha.setEditable(false);
 				chckbxPrestado.setSelected(listaLibros.get(index).isPrestado());
-				chckbxPrestado.setEnabled(rootPaneCheckingEnabled);
-				setBotonesNavegacion(index, listaLibros);
+				chckbxPrestado.setEnabled(false);
+				setBotonesNavegacion();
+				tableBiblioteca.setRowSelectionAllowed(true);
 			}
 		});
 	}
 
-	private void setLibro(int index, List<Libro> listaLibros) {
+	private void setLibro() {
 		// TODO Auto-generated method stub
 		textTitulo.setText(listaLibros.get(index).getTitulo());
 		textAutor.setText(listaLibros.get(index).getAutor());
 		textEditorial.setText(listaLibros.get(index).getEditorial());
 		textIsbn.setText(listaLibros.get(index).getIsbn());
+		textPrecio.setText(listaLibros.get(index).getPrecio()+"");
 		textFecha.setText(listaLibros.get(index).getFechaRegistro().toString());
 		chckbxPrestado.setSelected(listaLibros.get(index).isPrestado()); 
 	}
 
-	private void setBotonesNavegacion(int index,List<Libro> lista) {
+	private void setBotonesNavegacion() {
 		// TODO Auto-generated method stub
 		if (index==0) {
 			btnBeginning.setEnabled(false);
 			btnBackward.setEnabled(false);
 			btnEnd.setEnabled(true);
 			btnForward.setEnabled(true);
-		} else if (index>0 && index<lista.size()-1) {
+		} else if (index>0 && index<listaLibros.size()-1) {
 			btnBeginning.setEnabled(true);
 			btnBackward.setEnabled(true);
 			btnEnd.setEnabled(true);
@@ -193,12 +212,16 @@ public class Menu extends JFrame {
 	
 	}
 
-	private void setGrid(List<Libro> listaLibros) {
+	private void setGrid(List<Libro> lista) {
 		// TODO Auto-generated method stub
-		for (Libro lib:listaLibros) {
-			this.columnaslibro=lib.toString().split(",");
-			dtm.addRow(this.columnaslibro);
+		dtm.setRowCount(0);
+		dtm.setColumnCount(0);
+		dtm.setColumnIdentifiers(titulos);
+		for (Libro lib:lista) {
+			columnaslibro=lib.toString().split(",");
+			dtm.addRow(columnaslibro);
 		}
+		tableBiblioteca.setRowSelectionInterval(index, index);
 	}
 
 	private void definirEventosNavegacion() {
@@ -206,29 +229,34 @@ public class Menu extends JFrame {
 		btnEnd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				index=listaLibros.size()-1;
-				setBotonesNavegacion(index,listaLibros);
-				setLibro(index,listaLibros);
+				setBotonesNavegacion();
+				setLibro();
+				tableBiblioteca.setRowSelectionInterval(index, index);
 			}
 		});
 		btnBeginning.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				index=0;
-				setBotonesNavegacion(index,listaLibros);
-				setLibro(index,listaLibros);
+				setBotonesNavegacion();
+				setLibro();
+				tableBiblioteca.setRowSelectionInterval(index, index);
+
 			}
 		});
 		btnForward.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				index++;
-				setBotonesNavegacion(index,listaLibros);
-				setLibro(index,listaLibros);
+				setBotonesNavegacion();
+				setLibro();
+				tableBiblioteca.setRowSelectionInterval(index, index);
 			}
 		});
 		btnBackward.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				index--;
-				setBotonesNavegacion(index,listaLibros);
-				setLibro(index,listaLibros);
+				setBotonesNavegacion();
+				setLibro();
+				tableBiblioteca.setRowSelectionInterval(index, index);
 			}
 		});
 	}
@@ -248,7 +276,7 @@ public class Menu extends JFrame {
 		icon=null;
 		
 		icon=new ImageIcon("img/edit.png");
-		btnEdit = new JButton("",icon);
+		btnEdit = new JToggleButton("",icon);
 		btnEdit.setBounds(60, 23, 40, 40);
 		panel.add(btnEdit);
 		icon=null;
@@ -279,82 +307,83 @@ public class Menu extends JFrame {
 		contentPane.add(panel_1);
 		panel_1.setLayout(null);
 		
-		lblIdLibros = new JLabel("IdLibro");
-		lblIdLibros.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblIdLibros.setBounds(24, 30, 70, 20);
-		panel_1.add(lblIdLibros);
-		
-		textIdLibro = new JTextField();
-		textIdLibro.setEditable(false);
-		textIdLibro.setBounds(104, 30, 40, 20);
-		panel_1.add(textIdLibro);
-		textIdLibro.setColumns(10);
-		
 		lblTitulo = new JLabel("Titulo");
 		lblTitulo.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblTitulo.setBounds(24, 61, 70, 20);
+		lblTitulo.setBounds(24, 22, 70, 20);
 		panel_1.add(lblTitulo);
 		
 		textTitulo = new JTextField();
 		textTitulo.setEditable(false);
 		textTitulo.setColumns(10);
-		textTitulo.setBounds(104, 61, 195, 20);
+		textTitulo.setBounds(104, 22, 195, 20);
 		panel_1.add(textTitulo);
 		
 		lblAutor = new JLabel("Autor");
 		lblAutor.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblAutor.setBounds(24, 92, 70, 20);
+		lblAutor.setBounds(24, 53, 70, 20);
 		panel_1.add(lblAutor);
 		
 		textAutor = new JTextField();
 		textAutor.setEditable(false);
 		textAutor.setColumns(10);
-		textAutor.setBounds(104, 92, 195, 20);
+		textAutor.setBounds(104, 53, 195, 20);
 		panel_1.add(textAutor);
 		
 		lblEditorial = new JLabel("Editorial");
 		lblEditorial.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblEditorial.setBounds(24, 123, 70, 20);
+		lblEditorial.setBounds(24, 84, 70, 20);
 		panel_1.add(lblEditorial);
 		
 		textEditorial = new JTextField();
 		textEditorial.setEditable(false);
 		textEditorial.setColumns(10);
-		textEditorial.setBounds(104, 123, 195, 20);
+		textEditorial.setBounds(104, 84, 195, 20);
 		panel_1.add(textEditorial);
 		
 		lblIsbn = new JLabel("Isbn");
 		lblIsbn.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblIsbn.setBounds(24, 154, 70, 20);
+		lblIsbn.setBounds(24, 115, 70, 20);
 		panel_1.add(lblIsbn);
 		
 		textIsbn = new JTextField();
 		textIsbn.setEditable(false);
 		textIsbn.setColumns(10);
-		textIsbn.setBounds(104, 154, 195, 20);
+		textIsbn.setBounds(104, 115, 195, 20);
 		panel_1.add(textIsbn);
 		
 		lblFecha = new JLabel("Fecha:");
 		lblFecha.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblFecha.setBounds(24, 185, 70, 20);
+		lblFecha.setBounds(24, 177, 70, 20);
 		panel_1.add(lblFecha);
 		
 		textFecha = new JTextField();
 		textFecha.setEditable(false);
 		textFecha.setColumns(10);
-		textFecha.setBounds(104, 185, 109, 20);
+		textFecha.setBounds(104, 177, 109, 20);
 		panel_1.add(textFecha);
 		
 		lblFecha2 = new JLabel("aaaa-MM-dd");
 		lblFecha2.setHorizontalAlignment(SwingConstants.CENTER);
-		lblFecha2.setBounds(223, 185, 76, 20);
+		lblFecha2.setBounds(223, 177, 76, 20);
 		panel_1.add(lblFecha2);
 		
 		chckbxPrestado = new JCheckBox("Prestado");
 		chckbxPrestado.setEnabled(false);
 		chckbxPrestado.setFont(new Font("Tahoma", Font.BOLD, 11));
-		chckbxPrestado.setBounds(24, 211, 76, 23);
+		chckbxPrestado.setBounds(24, 204, 76, 23);
 		panel_1.add(chckbxPrestado);
+		
+		lblPrecio = new JLabel("Precio");
+		lblPrecio.setFont(new Font("Tahoma", Font.BOLD, 11));
+		lblPrecio.setBounds(24, 146, 70, 20);
+		panel_1.add(lblPrecio);
+		
+		textPrecio = new JTextField();
+		textPrecio.setText((String) null);
+		textPrecio.setEditable(false);
+		textPrecio.setColumns(10);
+		textPrecio.setBounds(104, 146, 53, 20);
+		panel_1.add(textPrecio);
 		
 		panel_2 = new JPanel();
 		panel_2.setBorder(new TitledBorder(new LineBorder(new Color(0, 0, 255), 2), "Navegador", TitledBorder.LEADING, TitledBorder.TOP, null, Color.BLUE));
@@ -415,8 +444,17 @@ public class Menu extends JFrame {
 		btnFiltrar = new JButton("Filtrar");
 		btnFiltrar.setBounds(821, 45, 89, 22);
 		contentPane.add(btnFiltrar);
-		dtm.setColumnIdentifiers(titulos);
 		
 		this.errorMessage=this;
+		
+		tableBiblioteca.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				index=tableBiblioteca.getSelectedRow();
+				setLibro();
+				setBotonesNavegacion();
+				btnUndo.doClick();
+			}
+		});
 	}
 }

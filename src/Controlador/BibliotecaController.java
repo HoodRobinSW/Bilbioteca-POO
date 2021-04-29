@@ -11,6 +11,7 @@ import java.util.List;
 import Excepciones.CampoObligatorioException;
 import Excepciones.IsbnException;
 import Excepciones.NotFoundException;
+import Excepciones.containsException;
 import Modelo.Libro;
 
 public class BibliotecaController {
@@ -48,10 +49,12 @@ public class BibliotecaController {
 	}
 	
 	public boolean agregar(String isbn,String titulo,String autor,String editorial,String fechaRegistro,
-			String precio,String prestado) throws NumberFormatException, ParseException, CampoObligatorioException, IsbnException {
+			String precio,String prestado) throws NumberFormatException, ParseException, CampoObligatorioException, IsbnException, containsException {
 		boolean agregado=false;
 		Libro libro=new Libro(isbn, titulo, autor, editorial, fechaRegistro, precio, prestado);
-		biblioteca.add(libro);
+		if (!biblioteca.contains(libro))
+			biblioteca.add(libro);
+		else throw new containsException();
 		return agregado;
 	}
 	
@@ -84,13 +87,32 @@ public class BibliotecaController {
 		return editado;
 	}
 	
-	public List<Libro> filtrado(String autor){
+	public List<Libro> filtradoAutor(String autor){
 		List<Libro> filtrado=new ArrayList<>();
 		for (Libro lib:biblioteca) {
 			if (autor.equalsIgnoreCase(lib.getAutor()))
 				filtrado.add(lib);	
 		}
 		
+		return filtrado;
+	}
+	
+	public List<Libro> filtradoTitulo(String titulo){
+		List<Libro> filtrado=new ArrayList<>();
+		for (Libro lib:biblioteca) {
+			if (titulo.equalsIgnoreCase(lib.getTitulo()))
+				filtrado.add(lib);	
+		}
+		
+		return filtrado;
+	}
+	
+	public List<Libro> filtradoPrecio(String precio){
+		List<Libro> filtrado=new ArrayList<>();
+		for (Libro lib:biblioteca) {
+			if (precio.equalsIgnoreCase(lib.getPrecio()+""))
+				filtrado.add(lib);	
+			}
 		return filtrado;
 	}
 	

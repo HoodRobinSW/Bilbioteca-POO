@@ -38,7 +38,7 @@ public class Main {
 			Menu menu=new Menu();
 		} catch (NumberFormatException | IOException | ParseException | CampoObligatorioException | IsbnException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 	}
 
