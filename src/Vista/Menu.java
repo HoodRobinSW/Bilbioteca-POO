@@ -10,16 +10,22 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.awt.event.ActionEvent;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import Controlador.BibliotecaController;
+import Excepciones.CampoObligatorioException;
+import Excepciones.IsbnException;
 import Modelo.Libro;
 
 import javax.swing.border.LineBorder;
 import java.awt.Color;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import java.awt.Font;
 import javax.swing.SwingConstants;
@@ -52,21 +58,25 @@ public class Menu extends JFrame {
 	private DefaultTableModel dtm;
 	private List<Libro> listaLibros;
 	private String titulos[]={"idLibro","Titulo","Autor","Editorial","Isbn","FechaPrestamo","Prestado"};
-	private String libro[];
+	private String columnaslibro[];
 	private JTextField textConsulta;
 	private JLabel lblConsulta;
 	private JComboBox comboBox;
 	private JButton btnFiltrar;
 	private int index;
+	private Libro libro;
+	private JFrame errorMessage;
+	private BibliotecaController bc;
 	
-	public Menu(List<Libro> libros) {
+	public Menu() throws NumberFormatException, IOException, ParseException, CampoObligatorioException, IsbnException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1156, 561);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		this.listaLibros=libros;
+		bc=new BibliotecaController();
+		this.listaLibros=bc.mostrarLibros();
 		index=0;
 		
 		definirVentana();
@@ -75,7 +85,6 @@ public class Menu extends JFrame {
 		setGrid(listaLibros);
 		setBotonesNavegacion(index,listaLibros);
 		setLibro(index,listaLibros);
-		setMantenimiento(index,listaLibros);
 		setVisible(true);
 	}
 
@@ -83,6 +92,28 @@ public class Menu extends JFrame {
 		// TODO Auto-generated method stub
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				btnAdd.setEnabled(false);
+				btnEdit.setEnabled(false);
+				btnDelete.setEnabled(false);
+				btnSave.setEnabled(true);
+				btnUndo.setEnabled(true);
+				
+				textTitulo.setText("");
+				textTitulo.setEditable(true);
+				textAutor.setText("");
+				textAutor.setEditable(true);
+				textEditorial.setText("");
+				textEditorial.setEditable(true);
+				textIsbn.setText("");
+				textIsbn.setEditable(true);
+				textFecha.setText("");
+				textFecha.setEditable(true);
+				chckbxPrestado.setSelected(false);
+				chckbxPrestado.setEnabled(true);
+				btnBeginning.setEnabled(false);
+				btnBackward.setEnabled(false);
+				btnEnd.setEnabled(false);
+				btnForward.setEnabled(false);
 			}
 		});
 		btnEdit.addActionListener(new ActionListener() {
@@ -95,13 +126,40 @@ public class Menu extends JFrame {
 		});
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				String titulo=textTitulo.getText(),autor=textAutor.getText(),editorial=textEditorial.getText(),isbn=textIsbn.getText(),
+						fecha=textFecha.getText(),prestado=chckbxPrestado.isSelected()+"";
+				try {
+					bc.agregar(isbn, titulo, autor, editorial, fecha, fecha, prestado);
+				} catch (NumberFormatException | ParseException | CampoObligatorioException | IsbnException l) {
+					// TODO Auto-generated catch block
+					JOptionPane.showMessageDialog(errorMessage,l.getMessage(),"ERROR!",JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
-	}
-
-	private void setMantenimiento(int index, List<Libro> listaLibros) {
-		// TODO Auto-generated method stub
-		
+		btnUndo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				libro=null;
+				btnAdd.setEnabled(true);
+				btnEdit.setEnabled(true);
+				btnDelete.setEnabled(true);
+				btnSave.setEnabled(false);
+				btnUndo.setEnabled(false);
+				
+				textTitulo.setText(listaLibros.get(index).getTitulo());
+				textTitulo.setEditable(false);
+				textAutor.setText(listaLibros.get(index).getAutor());
+				textAutor.setEditable(false);
+				textEditorial.setText(listaLibros.get(index).getEditorial());
+				textEditorial.setEditable(false);
+				textIsbn.setText(listaLibros.get(index).getIsbn());
+				textIsbn.setEditable(false);
+				textFecha.setText(listaLibros.get(index).getFechaRegistro().toString());
+				textFecha.setEditable(false);
+				chckbxPrestado.setSelected(listaLibros.get(index).isPrestado());
+				chckbxPrestado.setEnabled(rootPaneCheckingEnabled);
+				setBotonesNavegacion(index, listaLibros);
+			}
+		});
 	}
 
 	private void setLibro(int index, List<Libro> listaLibros) {
@@ -138,8 +196,8 @@ public class Menu extends JFrame {
 	private void setGrid(List<Libro> listaLibros) {
 		// TODO Auto-generated method stub
 		for (Libro lib:listaLibros) {
-			this.libro=lib.toString().split(",");
-			dtm.addRow(this.libro);
+			this.columnaslibro=lib.toString().split(",");
+			dtm.addRow(this.columnaslibro);
 		}
 	}
 
@@ -203,12 +261,14 @@ public class Menu extends JFrame {
 		
 		icon=new ImageIcon("img/save.png");
 		btnSave = new JButton("",icon);
+		btnSave.setEnabled(false);
 		btnSave.setBounds(160, 23, 40, 40);
 		panel.add(btnSave);
 		icon=null;
 		
 		icon=new ImageIcon("img/undo.png");
 		btnUndo = new JButton("",icon);
+		btnUndo.setEnabled(false);
 		btnUndo.setBounds(210, 23, 40, 40);
 		panel.add(btnUndo);
 		icon=null;
@@ -356,5 +416,7 @@ public class Menu extends JFrame {
 		btnFiltrar.setBounds(821, 45, 89, 22);
 		contentPane.add(btnFiltrar);
 		dtm.setColumnIdentifiers(titulos);
+		
+		this.errorMessage=this;
 	}
 }

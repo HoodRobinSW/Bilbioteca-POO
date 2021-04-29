@@ -34,7 +34,12 @@ public class Main {
 		
 		List<Libro> libros=bc.mostrarLibros();
 		
-		Menu menu=new Menu(libros);
+		try {
+			Menu menu=new Menu();
+		} catch (NumberFormatException | IOException | ParseException | CampoObligatorioException | IsbnException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
