@@ -93,7 +93,6 @@ public class Menu extends JFrame {
 		definirEventosMantenimiento();
 		setGrid(listaLibros);
 		setBotonesNavegacion();
-		setLibro();
 		setVisible(true);
 	}
 
@@ -101,7 +100,8 @@ public class Menu extends JFrame {
 		// TODO Auto-generated method stub
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {				
-				tableBiblioteca.setRowSelectionAllowed(false);
+				tableBiblioteca.setEnabled(false);
+
 				btnAdd.setEnabled(false);
 				btnEdit.setEnabled(false);
 				btnDelete.setEnabled(false);
@@ -215,6 +215,7 @@ public class Menu extends JFrame {
 		
 		btnUndo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				tableBiblioteca.setEnabled(true);
 				libro=null;
 				btnAdd.setEnabled(true);
 				btnEdit.setEnabled(true);
@@ -276,41 +277,49 @@ public class Menu extends JFrame {
 
 	private void setBotonesNavegacion() {
 		// TODO Auto-generated method stub
-		if (listaLibros.size()>2) {
-			if (index==0) {
-				btnBeginning.setEnabled(false);
-				btnBackward.setEnabled(false);
-				btnEnd.setEnabled(true);
-				btnForward.setEnabled(true);
-			} else if (index>0 && index<listaLibros.size()-1) {
-				btnBeginning.setEnabled(true);
-				btnBackward.setEnabled(true);
-				btnEnd.setEnabled(true);
-				btnForward.setEnabled(true);
-			} else {
-				btnForward.setEnabled(false);
-				btnEnd.setEnabled(false);
-				btnBeginning.setEnabled(true);
-				btnBackward.setEnabled(true);
-			}
-		} else if (listaLibros.size()==2){
-			if (index==0) {
-				btnForward.setEnabled(true);
-				btnEnd.setEnabled(false);
-				btnBeginning.setEnabled(false);
-				btnBackward.setEnabled(false);
-			} else {
-				btnForward.setEnabled(false);
-				btnEnd.setEnabled(false);
-				btnBeginning.setEnabled(false);
-				btnBackward.setEnabled(true);
-			}
-		}else {
-			btnForward.setEnabled(false);
-			btnEnd.setEnabled(false);
+		if (index<0) {
 			btnBeginning.setEnabled(false);
 			btnBackward.setEnabled(false);
-		}
+			btnEnd.setEnabled(false);
+			btnForward.setEnabled(false);
+		}else {
+			if (listaLibros.size()>2) {
+				if (index==0) {
+					btnBeginning.setEnabled(false);
+					btnBackward.setEnabled(false);
+					btnEnd.setEnabled(true);
+					btnForward.setEnabled(true);
+				} else if (index>0 && index<listaLibros.size()-1) {
+					btnBeginning.setEnabled(true);
+					btnBackward.setEnabled(true);
+					btnEnd.setEnabled(true);
+					btnForward.setEnabled(true);
+				} else {
+					btnForward.setEnabled(false);
+					btnEnd.setEnabled(false);
+					btnBeginning.setEnabled(true);
+					btnBackward.setEnabled(true);
+				}
+			} else if (listaLibros.size()==2){
+				if (index==0) {
+					btnForward.setEnabled(true);
+					btnEnd.setEnabled(false);
+					btnBeginning.setEnabled(false);
+					btnBackward.setEnabled(false);
+				} else {
+					btnForward.setEnabled(false);
+					btnEnd.setEnabled(false);
+					btnBeginning.setEnabled(false);
+					btnBackward.setEnabled(true);
+				}
+			}else {
+				btnForward.setEnabled(false);
+				btnEnd.setEnabled(false);
+				btnBeginning.setEnabled(false);
+				btnBackward.setEnabled(false);
+			}
+		} 
+		
 	
 	}
 
@@ -380,12 +389,14 @@ public class Menu extends JFrame {
 		
 		icon=new ImageIcon("img/edit.png");
 		btnEdit = new JToggleButton("",icon);
+		btnEdit.setEnabled(false);
 		btnEdit.setBounds(60, 23, 40, 40);
 		panel.add(btnEdit);
 		icon=null;
 		
 		icon=new ImageIcon("img/delete.png");
 		btnDelete = new JButton("",icon);
+		btnDelete.setEnabled(false);
 		btnDelete.setBounds(110, 23, 40, 40);
 		panel.add(btnDelete);
 		icon=null;
@@ -496,24 +507,28 @@ public class Menu extends JFrame {
 		
 		icon=new ImageIcon("img/beginning.png");
 		btnBeginning = new JButton("", icon);
+		btnBeginning.setEnabled(false);
 		btnBeginning.setBounds(10, 29, 40, 40);
 		panel_2.add(btnBeginning);
 		icon=null;
 		
 		icon=new ImageIcon("img/backward.png");
 		btnBackward = new JButton("", icon);
+		btnBackward.setEnabled(false);
 		btnBackward.setBounds(60, 29, 40, 40);
 		panel_2.add(btnBackward);
 		icon=null;
 		
 		icon=new ImageIcon("img/forward.png");
 		btnForward = new JButton("", icon);
+		btnForward.setEnabled(false);
 		btnForward.setBounds(110, 29, 40, 40);
 		panel_2.add(btnForward);
 		icon=null;
 		
 		icon=new ImageIcon("img/end.png");
 		btnEnd = new JButton("", icon);
+		btnEnd.setEnabled(false);
 		btnEnd.setBounds(160, 29, 40, 40);
 		panel_2.add(btnEnd);
 		
@@ -553,10 +568,14 @@ public class Menu extends JFrame {
 		tableBiblioteca.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
-				index=tableBiblioteca.getSelectedRow();
-				setLibro();
-				setBotonesNavegacion();
-				btnUndo.doClick();
+				if (tableBiblioteca.isEnabled()) {
+					if (btnDelete.isEnabled()==false && btnEdit.isEnabled()==false)
+						btnDelete.setEnabled(true);btnEdit.setEnabled(true);
+					index=tableBiblioteca.getSelectedRow();
+					setLibro();
+					setBotonesNavegacion();
+					btnUndo.doClick();
+				}
 			}
 		});
 	}
