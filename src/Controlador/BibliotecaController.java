@@ -103,10 +103,20 @@ public class BibliotecaController {
 		return filtrado;
 	}
 	
-	public List<Libro> filtradoTitulo(String titulo){
+	public List<Libro> filtradoEditorial(String editorial){
 		List<Libro> filtrado=new ArrayList<>();
 		for (Libro lib:biblioteca) {
-			if (titulo.equalsIgnoreCase(lib.getTitulo()))
+			if (editorial.equalsIgnoreCase(lib.getEditorial()))
+				filtrado.add(lib);	
+		}
+		
+		return filtrado;
+	}
+	
+	public List<Libro> filtradoFecha(String fecha){
+		List<Libro> filtrado=new ArrayList<>();
+		for (Libro lib:biblioteca) {
+			if (fecha.equalsIgnoreCase(lib.getFechaRegistro().toString()))
 				filtrado.add(lib);	
 		}
 		
@@ -119,6 +129,16 @@ public class BibliotecaController {
 			if (precio.equalsIgnoreCase(lib.getPrecio()+""))
 				filtrado.add(lib);	
 			}
+		return filtrado;
+	}
+	
+	public List<Libro> filtradoPrestado(String prestado){
+		List<Libro> filtrado=new ArrayList<>();
+		for (Libro lib:biblioteca) {
+			if (prestado.equalsIgnoreCase(lib.isPrestado()+""))
+				filtrado.add(lib);	
+		}
+		
 		return filtrado;
 	}
 	
